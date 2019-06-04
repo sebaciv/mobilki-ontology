@@ -1,5 +1,7 @@
 package pl.edu.agh.ki.mob.onto;
 
+import android.content.res.Resources;
+
 import com.hp.hpl.jena.ontology.OntModel;
 
 import com.hp.hpl.jena.ontology.OntClass;
@@ -12,6 +14,7 @@ import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.shared.PrefixMapping;
 import com.hp.hpl.jena.util.iterator.Filter;
 
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.DirectoryStream;
 import java.util.ArrayList;
@@ -157,20 +160,13 @@ public class ClassHierarchy {
     // Inner class definitions
     //==============================================================================
 
-    public static void bum() {
+    public static void bum(Resources resources) {
         OntModel m = ModelFactory.createOntologyModel( OntModelSpec.OWL_MEM, null );
 
-        // we have a local copy of the wine ontology
-//        m.getDocumentManager().addAltEntry( "http://www.w3.org/2001/sw/WebOnt/guide-src/wine",
-//                "file:testing/reasoners/bugs/wine.owl" );
-//        m.getDocumentManager().addAltEntry( "http://www.w3.org/2001/sw/WebOnt/guide-src/wine.owl",
-//                "file:testing/reasoners/bugs/wine.owl" );
-//        m.getDocumentManager().addAltEntry( "http://www.w3.org/2001/sw/WebOnt/guide-src/food",
-//                "file:testing/reasoners/bugs/food.owl" );
-//        m.getDocumentManager().addAltEntry( "http://www.w3.org/2001/sw/WebOnt/guide-src/food.owl",
-//                "file:testing/reasoners/bugs/food.owl" );
-
-        m.read( "http://www.w3.org/2001/sw/WebOnt/guide-src/wine" );
+        //m.read( "http://www.w3.org/2001/sw/WebOnt/guide-src/wine" );
+        InputStream resource = resources.openRawResource(R.raw.ontology);
+        m.read(resource, "");
+       // m.read( "http://www.w3.org/2001/sw/WebOnt/guide-src/wine" );
 
         new ClassHierarchy().showHierarchy( System.out, m );
     }

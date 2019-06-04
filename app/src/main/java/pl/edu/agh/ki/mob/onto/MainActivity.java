@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ClassHierarchy.bum();
+                ClassHierarchy.bum(getResources());
             }
         }).start();
 
