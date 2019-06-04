@@ -31,6 +31,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ClassHierarchy.bum();
+            }
+        }).start();
+
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
