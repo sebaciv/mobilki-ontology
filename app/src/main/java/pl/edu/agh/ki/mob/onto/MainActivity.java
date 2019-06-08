@@ -4,8 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.location.LocationManager;
 import android.location.LocationProvider;
@@ -46,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ClassHierarchy.bum(getResources());
+                ClassHierarchy.show(getResources());
+                OntologyUtils.classificationPOC(getResources());
             }
         }).start();
 
