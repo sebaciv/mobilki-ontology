@@ -2,6 +2,7 @@ package pl.edu.agh.ki.mob.onto;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
@@ -19,6 +20,8 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
+
+import pl.edu.agh.ki.mob.onto.fall.FallService;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,11 +67,13 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                        PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
                     MY_PERMISSIONS_REQUEST_LOCATION);
         } else {
-            accessLocation();
+            initLocation();
         }
     }
 
@@ -77,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    accessLocation();
+                    initLocation();
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -87,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void accessLocation() {
+    private void initLocation() {
         this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         this.locationProvider = this.locationManager.getProvider(LocationManager.GPS_PROVIDER);
 
@@ -99,6 +104,9 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT
             ).show();
         }
+
+        Intent intent = new Intent(getApplicationContext(), FallService.class);
+        startService(intent);
     }
 
     @Override

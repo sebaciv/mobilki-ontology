@@ -77,8 +77,8 @@ public class OntologyUtils {
         Resource standing = infmodel.getResource(FALLEN_HEATSTROKE_HUMAN_CLASS);
         Resource fallen = infmodel.getResource(FALLEN_HUMAN_CLASS);
 
-        if (infmodel.contains(individual, RDF.type, fallen)) {
-            System.out.println("Fallen!");
+        if (infmodel.contains(individual, RDF.type, standing)) {
+            System.out.println("Standing!");
         } else {
             System.out.println("Well..");
         }
