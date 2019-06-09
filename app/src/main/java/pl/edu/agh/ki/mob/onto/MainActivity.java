@@ -1,13 +1,20 @@
 package pl.edu.agh.ki.mob.onto;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -92,12 +99,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void initLocation() {
         this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
         this.locationProvider = this.locationManager.getProvider(LocationManager.GPS_PROVIDER);
 
         if (locationProvider != null) {
-
+            LocationListener locationListener = new MyLocationListener();
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
         } else {
             Toast.makeText(this,
                     "Location Provider is not available at the moment!",
@@ -107,6 +116,60 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intent = new Intent(getApplicationContext(), FallService.class);
         startService(intent);
+    }
+
+    public class MyLocationListener implements LocationListener {
+        private double lat;
+        private double lon;
+        private float speed; // km/h
+
+        @Override
+        public void onLocationChanged(Location location) {
+            this.lat = location.getLatitude();
+            this.lon = location.getLongitude();
+            this.speed = location.getSpeed();
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+
+        public double getLat() {
+            return lat;
+        }
+
+        public double getLon() {
+            return lon;
+        }
+
+        public float getSpeed() {
+            return speed;
+        }
+    }
+
+    public String getCurrentSsid() {
+        String ssid = null;
+        ConnectivityManager connManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (networkInfo.isConnected()) {
+            final WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+            final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
+            if (connectionInfo != null) {
+                ssid = connectionInfo.getSSID();
+            }
+        }
+        return ssid;
     }
 
     @Override
