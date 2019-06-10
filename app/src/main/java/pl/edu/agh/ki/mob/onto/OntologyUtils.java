@@ -27,12 +27,12 @@ public class OntologyUtils {
     public static final String STANDING_HUMAN_CLASS = URL_BASE + "StandingHuman";
     public static final String FALLEN_EPILEPSY_HUMAN_CLASS = URL_BASE + "FallenHumanEpilepsy";
     public static final String FALLEN_HEATSTROKE_HUMAN_CLASS = URL_BASE + "FallenHumanHeatstroke";
+    public static final String VEHICLE_ACCIDENT_HUMAN_CLASS = URL_BASE + "FallenHumanVehicleAccident";
 
     public static final String PHONE_CLASS = URL_BASE + "Phone";
 
     public static final String OUTSIDE_LOCATION_CLASS = URL_BASE + "OutsideLocation";
     public static final String HOME_LOCATION_CLASS = URL_BASE + "HomeLocation";
-    public static final String HOSPITAL_LOCATION_CLASS = URL_BASE + "HospitalLocation";
 
     public static final String NO_MOVEMENT_CLASS = URL_BASE + "NoMovement";
     public static final String SEIZURES_MOVEMENT_CLASS = URL_BASE + "Seizures";
@@ -46,6 +46,7 @@ public class OntologyUtils {
     public enum HumanStatus {
         STANDING(STANDING_HUMAN_CLASS),
         FALLEN(FALLEN_HUMAN_CLASS),
+        ACCIDENT(VEHICLE_ACCIDENT_HUMAN_CLASS),
         FALLEN_EPILEPSY(FALLEN_EPILEPSY_HUMAN_CLASS),
         FALLEN_HEATSTROKE(FALLEN_HEATSTROKE_HUMAN_CLASS);
 
@@ -128,12 +129,17 @@ public class OntologyUtils {
 
         individual.getOntModel().write(System.out);
 
-        Optional<HumanStatus> result = Stream.of(HumanStatus.FALLEN_HEATSTROKE, HumanStatus.FALLEN_EPILEPSY, HumanStatus.FALLEN, HumanStatus.STANDING)
-                .filter(status -> infmodel.contains(individual, RDF.type, infmodel.getResource(status.getUrl())))
+        Optional<HumanStatus> result = Stream.of(
+                HumanStatus.ACCIDENT,
+                HumanStatus.FALLEN_HEATSTROKE,
+                HumanStatus.FALLEN_EPILEPSY,
+                HumanStatus.FALLEN,
+                HumanStatus.STANDING
+        ).filter(status -> infmodel.contains(individual, RDF.type, infmodel.getResource(status.getUrl())))
                 .findFirst();
 
         if (result.isPresent()) {
-            System.out.println("Classified as" + result.get().name());
+            System.out.println("Classified as " + result.get().name());
         } else {
             System.out.println("Cannot classify!");
         }

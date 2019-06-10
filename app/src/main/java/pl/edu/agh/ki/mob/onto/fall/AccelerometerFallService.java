@@ -1,6 +1,7 @@
 package pl.edu.agh.ki.mob.onto.fall;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -23,11 +25,13 @@ import java.util.TimerTask;
 /*
  *  https://github.com/swift2891/Fall_Detection
  */
-public class FallService extends Service implements SensorEventListener {
+public class AccelerometerFallService extends Service implements SensorEventListener {
 
     Handler handler = new Handler(Looper.getMainLooper());
     private Handler mPeriodicEventHandler = new Handler();
     private final int PERIODIC_EVENT_TIMEOUT = 3000;
+
+    private final IBinder mBinder = new LocalBinder();
 
     private Timer fuseTimer = new Timer();
 
@@ -112,7 +116,7 @@ public class FallService extends Service implements SensorEventListener {
 
                 @Override
                 public void run() {
-                    Toast.makeText(FallService.this.getApplicationContext(), "No GPS Permission!!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AccelerometerFallService.this.getApplicationContext(), "No GPS Permission!!", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -350,19 +354,13 @@ public class FallService extends Service implements SensorEventListener {
                     if (degreeFloat > 30 || degreeFloat2 > 30) {
                         Log.d("Degree1:", "" + degreeFloat);
                         Log.d("Degree2:", "" + degreeFloat2);
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(FallService.this.getApplicationContext(), "Sensed Danger! Sending SMS", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                        Toast.makeText(getApplicationContext(), "Sensed Danger! Sending SMS", Toast.LENGTH_SHORT).show();
 
+                        notifyActivity();
                     } else {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                Toast.makeText(FallService.this.getApplicationContext(), "Sudden Movement! But looks safe", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(AccelerometerFallService.this.getApplicationContext(), "Sudden Movement! But looks safe", Toast.LENGTH_SHORT).show();
                             }
                         });
                     }
@@ -373,6 +371,30 @@ public class FallService extends Service implements SensorEventListener {
             }
             gyroMatrix = getRotationMatrixFromOrientation(fusedOrientation);
             System.arraycopy(fusedOrientation, 0, gyroOrientation, 0, 3);
+        }
+    }
+
+    // COMMUNICATION
+    private FallDetectedCallback activity;
+
+    public interface FallDetectedCallback {
+        void fallDetected();
+    }
+
+    //returns the instance of the service
+    public class LocalBinder extends Binder {
+        public AccelerometerFallService getServiceInstance(){
+            return AccelerometerFallService.this;
+        }
+    }
+
+    public void registerClient(Activity activity){
+        this.activity = (FallDetectedCallback)activity;
+    }
+
+    private void notifyActivity() {
+        if (activity != null) {
+            activity.fallDetected();
         }
     }
 }
