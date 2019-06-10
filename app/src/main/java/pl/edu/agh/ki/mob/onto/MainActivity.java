@@ -55,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 ClassHierarchy.show(getResources());
-                OntologyUtils.classificationPOC(getResources());
             }
         }).start();
 

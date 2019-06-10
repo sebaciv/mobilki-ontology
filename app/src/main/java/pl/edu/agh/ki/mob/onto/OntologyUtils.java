@@ -10,13 +10,14 @@ import com.hp.hpl.jena.ontology.OntModel;
 import com.hp.hpl.jena.ontology.OntModelSpec;
 import com.hp.hpl.jena.rdf.model.InfModel;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
-import com.hp.hpl.jena.rdf.model.Resource;
 import com.hp.hpl.jena.rdf.model.impl.ResourceImpl;
 import com.hp.hpl.jena.reasoner.Reasoner;
 import com.hp.hpl.jena.reasoner.ReasonerRegistry;
 import com.hp.hpl.jena.vocabulary.RDF;
 
 import java.io.InputStream;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class OntologyUtils {
     private static final String URL_BASE = "http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#";
@@ -42,6 +43,53 @@ public class OntologyUtils {
     public static final String TEMPERATURE_PROP = URL_BASE + "Temperature";
     public static final String VELOCITY_PROP = URL_BASE + "Velocity";
 
+    public enum HumanStatus {
+        STANDING(STANDING_HUMAN_CLASS),
+        FALLEN(FALLEN_HUMAN_CLASS),
+        FALLEN_EPILEPSY(FALLEN_EPILEPSY_HUMAN_CLASS),
+        FALLEN_HEATSTROKE(FALLEN_HEATSTROKE_HUMAN_CLASS);
+
+        private final String url;
+
+        HumanStatus(String url) {
+            this.url = url;
+        }
+
+        String getUrl() {
+            return url;
+        }
+    }
+
+    public enum LocationType {
+        OUTSIDE(OUTSIDE_LOCATION_CLASS),
+        HOME(HOME_LOCATION_CLASS);
+
+        private final String url;
+
+        LocationType(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
+
+    public enum MovementType {
+        NO_MOVEMENT(NO_MOVEMENT_CLASS),
+        SEIZURES(SEIZURES_MOVEMENT_CLASS);
+
+        private final String url;
+
+        MovementType(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
+
     public static OntModel readOntology(Resources resources) {
         OntModel ontoSchema = ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM, null);
         InputStream resource = resources.openRawResource(R.raw.ontology2);
@@ -49,7 +97,13 @@ public class OntologyUtils {
         return ontoSchema;
     }
 
-    public static void classificationPOC(Resources resources) {
+    public static Optional<HumanStatus> classify(
+            Resources resources,
+            LocationType locationType,
+            MovementType movementType,
+            Optional<Double> temperature,
+            Optional<Double> velocity
+    ) {
         OntModel ontoSchema = readOntology(resources);
 
         OntClass humanClass = ontoSchema.getOntClass(HUMAN_CLASS);
@@ -62,11 +116,11 @@ public class OntologyUtils {
         DatatypeProperty tempProperty = ontoSchema.getDatatypeProperty(TEMPERATURE_PROP);
         DatatypeProperty velocityProperty = ontoSchema.getDatatypeProperty(VELOCITY_PROP);
 
-        individual.addProperty(locationProperty, new ResourceImpl(OUTSIDE_LOCATION_CLASS));
+        individual.addProperty(locationProperty, new ResourceImpl(locationType.getUrl()));
         individual.addProperty(notActiveProperty, new ResourceImpl(PHONE_CLASS));
-        individual.addProperty(movementProperty, new ResourceImpl(SEIZURES_MOVEMENT_CLASS));
-        individual.addLiteral(tempProperty, 50);
-        individual.addLiteral(velocityProperty, 1);
+        individual.addProperty(movementProperty, new ResourceImpl(movementType.getUrl()));
+        temperature.ifPresent(value -> individual.addLiteral(tempProperty, value.intValue()));
+        velocity.ifPresent(value -> individual.addLiteral(velocityProperty, value.intValue()));
 
         Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
         reasoner = reasoner.bindSchema(ontoSchema);
@@ -74,13 +128,15 @@ public class OntologyUtils {
 
         individual.getOntModel().write(System.out);
 
-        Resource standing = infmodel.getResource(FALLEN_HEATSTROKE_HUMAN_CLASS);
-        Resource fallen = infmodel.getResource(FALLEN_HUMAN_CLASS);
+        Optional<HumanStatus> result = Stream.of(HumanStatus.FALLEN_HEATSTROKE, HumanStatus.FALLEN_EPILEPSY, HumanStatus.FALLEN, HumanStatus.STANDING)
+                .filter(status -> infmodel.contains(individual, RDF.type, infmodel.getResource(status.getUrl())))
+                .findFirst();
 
-        if (infmodel.contains(individual, RDF.type, standing)) {
-            System.out.println("Standing!");
+        if (result.isPresent()) {
+            System.out.println("Classified as" + result.get().name());
         } else {
-            System.out.println("Well..");
+            System.out.println("Cannot classify!");
         }
+        return result;
     }
 }
