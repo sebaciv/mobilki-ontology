@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -178,15 +179,15 @@ public class MainActivity extends AppCompatActivity implements AccelerometerFall
         }
     }
 
-    public String getCurrentSsid() {
-        String ssid = null;
+    private Optional<String> getCurrentSsid() {
+        Optional<String> ssid = Optional.empty();
         ConnectivityManager connManager = (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
         if (networkInfo.isConnected()) {
             final WifiManager wifiManager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
             final WifiInfo connectionInfo = wifiManager.getConnectionInfo();
             if (connectionInfo != null) {
-                ssid = connectionInfo.getSSID();
+                ssid = Optional.ofNullable(connectionInfo.getSSID());
             }
         }
         return ssid;
@@ -259,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements AccelerometerFall
                     result = OntologyUtils.classify(
                             getResources(),
                             guessLocation(),
-                            OntologyUtils.MovementType.SEIZURES,
+                            OntologyUtils.MovementType.NO_MOVEMENT,
                             temperature,
                             Optional.of(speed)
                     );
@@ -283,8 +284,12 @@ public class MainActivity extends AppCompatActivity implements AccelerometerFall
     }
 
     private OntologyUtils.LocationType guessLocation() {
-        //fixme wifi
-
-        return OntologyUtils.LocationType.OUTSIDE;
+        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+        Optional<String> currentSsid = getCurrentSsid();
+        if (currentSsid.map(ssid -> ssid.equals(sharedPref.getString(getString(R.string.my_home_wifi_ssid), ""))).orElse(false)) {
+            return OntologyUtils.LocationType.HOME;
+        } else {
+            return OntologyUtils.LocationType.OUTSIDE;
+        }
     }
 }
