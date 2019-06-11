@@ -22,6 +22,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -37,7 +38,10 @@ import java.util.Optional;
 
 import pl.edu.agh.ki.mob.onto.fall.AccelerometerFallService;
 
-public class MainActivity extends AppCompatActivity implements AccelerometerFallService.FallDetectedCallback {
+public class MainActivity extends AppCompatActivity implements
+        AccelerometerFallService.FallDetectedCallback,
+        FallDialog.FallDialogListener
+{
 
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 123;
 
@@ -138,6 +142,23 @@ public class MainActivity extends AppCompatActivity implements AccelerometerFall
         }
     };
 
+    public void showFallDialog(OntologyUtils.HumanStatus result) {
+        // Create an instance of the dialog fragment and show it
+        FallDialog dialog = new FallDialog();
+        dialog.setHumanStatus(result);
+        dialog.show(getSupportFragmentManager(), "FallDialogFragment");
+    }
+
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        // future work: call someone, send sms
+        System.out.println("Boo!");
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        System.out.println("Nothing happened");
+    }
 
     public class MyLocationListener implements LocationListener {
         private double lat;
@@ -225,17 +246,31 @@ public class MainActivity extends AppCompatActivity implements AccelerometerFall
         startReasoning();
     }
 
-
     private static class FallHandler extends Handler {
         private final WeakReference<MainActivity> mActivity;
         FallHandler(MainActivity activity) {
-            mActivity = new WeakReference<MainActivity>(activity);
+            mActivity = new WeakReference<>(activity);
         }
+
         @Override
         public void handleMessage(Message msg) {
             MainActivity activity = mActivity.get();
-
-
+            String result = (String) msg.getData().get("result");
+            if (result == null) {
+                Toast.makeText(activity, "Cannot classify fall data!", Toast.LENGTH_SHORT).show();
+            } else {
+                OntologyUtils.HumanStatus status = OntologyUtils.HumanStatus.valueOf(result);
+                switch (status) {
+                    case STANDING:
+                        Toast.makeText(activity, "Sudden phone movement detected", Toast.LENGTH_SHORT).show();
+                        break;
+                    case ACCIDENT:
+                        Toast.makeText(activity, "Sudden phone movement detected while traveling by vehicle", Toast.LENGTH_SHORT).show();
+                        break;
+                    default:
+                        activity.showFallDialog(status);
+                }
+            }
         }
     }
 

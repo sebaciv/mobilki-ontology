@@ -127,7 +127,7 @@ public class OntologyUtils {
         reasoner = reasoner.bindSchema(ontoSchema);
         InfModel infmodel = ModelFactory.createInfModel(reasoner, individual.getModel());
 
-        individual.getOntModel().write(System.out);
+        //individual.getOntModel().write(System.out);
 
         Optional<HumanStatus> result = Stream.of(
                 HumanStatus.ACCIDENT,
