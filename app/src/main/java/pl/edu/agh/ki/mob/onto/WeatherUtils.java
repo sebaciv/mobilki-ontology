@@ -17,9 +17,9 @@ public class WeatherUtils {
     private static final String API_KEY = "28e5a2f5acc38bf3cb70798ec4902514";
     private static final String OPENWEATHER_WEATHER_QUERY = "http://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&mode=json&units=metric&appid=" + API_KEY;
 
-    public static Optional<Double> getTemperature(double lat, double lon) {
+    public static Optional<Double> getTemperature(SimpleLocation location) {
         try {
-            String json = getContentFromUrl(String.format(OPENWEATHER_WEATHER_QUERY, lat, lon));
+            String json = getContentFromUrl(String.format(OPENWEATHER_WEATHER_QUERY, location.getLat(), location.getLon()));
             JSONObject reader = new JSONObject(json);
             return Optional.of(reader.getJSONObject("main").getDouble("temp"));
         } catch (JSONException e) {

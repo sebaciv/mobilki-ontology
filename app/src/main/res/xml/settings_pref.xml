@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="@string/my_home_wifi_ssid"
+        android:title="Home WiFi SSID"/>
+
+    <EditTextPreference
+        android:defaultValue="30.0"
+        android:key="@string/max_temperature"
+        android:title="Max temperature"/>
+
+    <EditTextPreference
+        android:defaultValue="25.0"
+        android:key="@string/max_velocity"
+        android:title="Max velocity"/>
+
+    <EditTextPreference
+        android:key="@string/my_home_address"
+        android:title="Home address"/>
+</PreferenceScreen>

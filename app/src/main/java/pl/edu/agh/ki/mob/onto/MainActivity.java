@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -21,10 +23,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.support.annotation.StringRes;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -33,14 +37,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import pl.edu.agh.ki.mob.onto.fall.AccelerometerFallService;
 
 public class MainActivity extends AppCompatActivity implements
         AccelerometerFallService.FallDetectedCallback,
-        FallDialog.FallDialogListener
+        FallDialog.FallDialogListener,
+        SharedPreferences.OnSharedPreferenceChangeListener
 {
 
     private static final int MY_PERMISSIONS_REQUEST_LOCATION = 123;
@@ -56,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        setupSharedPreferences();
 
         fallHandler = new FallHandler(this);
 
@@ -75,6 +84,11 @@ public class MainActivity extends AppCompatActivity implements
         });
     }
 
+    private void setupSharedPreferences() {
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences.registerOnSharedPreferenceChangeListener(this);
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -88,6 +102,10 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             initLocation();
         }
+
+        Intent intent = new Intent(getApplicationContext(), AccelerometerFallService.class);
+        startService(intent);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -105,6 +123,11 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+
+    }
+
     @SuppressLint("MissingPermission")
     private void initLocation() {
         this.locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -119,10 +142,6 @@ public class MainActivity extends AppCompatActivity implements
                     Toast.LENGTH_SHORT
             ).show();
         }
-
-        Intent intent = new Intent(getApplicationContext(), AccelerometerFallService.class);
-        startService(intent);
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -141,6 +160,12 @@ public class MainActivity extends AppCompatActivity implements
             Toast.makeText(MainActivity.this, "Detection service disconnected", Toast.LENGTH_SHORT).show();
         }
     };
+
+    @Override
+    protected void onStop() {
+        unbindService(mConnection);
+        super.onStop();
+    }
 
     public void showFallDialog(OntologyUtils.HumanStatus result) {
         // Create an instance of the dialog fragment and show it
@@ -187,6 +212,10 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public void onProviderDisabled(String provider) {
 
+        }
+
+        public SimpleLocation getLocation() {
+            return new SimpleLocation(lat, lon);
         }
 
         public double getLat() {
@@ -241,6 +270,8 @@ public class MainActivity extends AppCompatActivity implements
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -250,6 +281,46 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void fallDetected() {
         startReasoning();
+    }
+
+    private static class GeoUtils {
+        public static double distance(double lat1, double lon1, double lat2, double lon2) {
+            double theta = lon1 - lon2;
+            double dist = Math.sin(deg2rad(lat1)) * Math.sin(deg2rad(lat2)) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.cos(deg2rad(theta));
+            dist = Math.acos(dist);
+            dist = rad2deg(dist);
+            dist = dist * 60 * 1.1515;
+            dist = dist * 1.609344;
+            return (dist);
+        }
+
+        private static double deg2rad(double deg) {
+            return (deg * Math.PI / 180.0);
+        }
+
+        private static double rad2deg(double rad) {
+            return (rad * 180.0 / Math.PI);
+        }
+    }
+
+    private boolean isCloseToHome(String address, SimpleLocation location) {
+        Geocoder geoCoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geoCoder.getFromLocationName(address, 5);
+            if (addresses.size() > 0) {
+                double lat = (addresses.get(0).getLatitude());
+                double lon = (addresses.get(0).getLongitude());
+
+                Log.d("lat-long", "" + lat + "......." + lon);
+                double distance = GeoUtils.distance(lat, lon, location.getLat(), location.getLon());
+                return distance < 0.05;
+            } else {
+                return false;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     private static class FallHandler extends Handler {
@@ -284,53 +355,72 @@ public class MainActivity extends AppCompatActivity implements
         new Thread(new Runnable() {
             @Override
             public void run() {
-                Optional<OntologyUtils.HumanStatus> result = Optional.empty();
+                try {
+                    Optional<OntologyUtils.HumanStatus> result = Optional.empty();
 
-                if (locationListener != null && locationListener.isHasValue()) {
-                    double lat = locationListener.getLat();
-                    double lon = locationListener.getLon();
-                    double speed = locationListener.getSpeed();
-                    Optional<Double> temperature = Optional.empty();
+                    if (locationListener != null && locationListener.isHasValue()) {
+                        SimpleLocation location = locationListener.getLocation();
+                        double speed = locationListener.getSpeed();
+                        Optional<Double> temperature = Optional.empty();
 
-                    try {
-                        temperature = WeatherUtils.getTemperature(lat, lon);
-                    } catch (Exception e) {
-                        Log.e("Weather", "", e);
+                        try {
+                            temperature = WeatherUtils.getTemperature(location);
+                        } catch (Exception e) {
+                            Log.e("Weather", "", e);
+                        }
+
+                        Double maxVelo = doGetPreference(R.string.max_velocity).map(s -> Double.parseDouble(s)).orElse(20.0);
+                        Double maxTemp = doGetPreference(R.string.max_temperature).map(s -> Double.parseDouble(s)).orElse(30.0);
+
+                        result = OntologyUtils.classify(
+                                getResources(),
+                                guessLocation(Optional.of(location)),
+                                OntologyUtils.MovementType.NO_MOVEMENT,
+                                temperature.map(value -> (value > maxTemp) ? OntologyUtils.TemperatureType.HIGH : OntologyUtils.TemperatureType.LOW),
+                                Optional.of(speed).map(value -> (value > maxVelo) ? OntologyUtils.VelocityType.HIGH : OntologyUtils.VelocityType.LOW)
+                        );
+                    } else {
+                        result = OntologyUtils.classify(
+                                getResources(),
+                                guessLocation(Optional.empty()),
+                                OntologyUtils.MovementType.NO_MOVEMENT,
+                                Optional.empty(),
+                                Optional.empty()
+                        );
                     }
 
-                    result = OntologyUtils.classify(
-                            getResources(),
-                            guessLocation(),
-                            OntologyUtils.MovementType.NO_MOVEMENT,
-                            temperature.map(value -> (value > 30.0) ? OntologyUtils.TemperatureType.HIGH : OntologyUtils.TemperatureType.LOW),
-                            Optional.of(speed).map(value -> (value > 20.0) ? OntologyUtils.VelocityType.HIGH : OntologyUtils.VelocityType.LOW)
-                    );
-                } else {
-                    result = OntologyUtils.classify(
-                            getResources(),
-                            guessLocation(),
-                            OntologyUtils.MovementType.NO_MOVEMENT,
-                            Optional.empty(),
-                            Optional.empty()
-                    );
+                    Message m = fallHandler.obtainMessage();
+                    Bundle b = new Bundle();
+                    result.ifPresent(value -> b.putString("result", value.name()));
+                    m.setData(b);
+                    fallHandler.sendMessage(m);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Reasoning failed");
                 }
-
-                Message m = fallHandler.obtainMessage();
-                Bundle b = new Bundle();
-                result.ifPresent(value -> b.putString("result", value.name()));
-                m.setData(b);
-                fallHandler.sendMessage(m);
             }
         }).start();
     }
 
-    private OntologyUtils.LocationType guessLocation() {
-        SharedPreferences sharedPref = this.getPreferences(Context.MODE_PRIVATE);
+    private OntologyUtils.LocationType guessLocation(Optional<SimpleLocation> location) {
         Optional<String> currentSsid = getCurrentSsid();
-        if (currentSsid.map(ssid -> ssid.equals(sharedPref.getString(getString(R.string.my_home_wifi_ssid), ""))).orElse(false)) {
+        if (currentSsid.map(ssid -> ssid.equals(doGetPreference(R.string.my_home_wifi_ssid).orElse(""))).orElse(false)) {
             return OntologyUtils.LocationType.HOME;
         } else {
-            return OntologyUtils.LocationType.OUTSIDE;
+            return location.map(loc -> {
+                Optional<String> address = doGetPreference(R.string.my_home_address);
+                if (address.isPresent()) {
+                    boolean isClose = isCloseToHome(address.get(), loc);
+                    return isClose ? OntologyUtils.LocationType.HOME : OntologyUtils.LocationType.OUTSIDE;
+                } else {
+                    return OntologyUtils.LocationType.OUTSIDE;
+                }
+            }).orElse(OntologyUtils.LocationType.OUTSIDE);
         }
+    }
+
+    private Optional<String> doGetPreference(@StringRes int resId) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        return Optional.ofNullable(sharedPref.getString(getString(resId), "")).filter(s -> !s.isEmpty());
     }
 }
