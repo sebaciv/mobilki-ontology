@@ -164,9 +164,11 @@ public class MainActivity extends AppCompatActivity implements
         private double lat;
         private double lon;
         private float speed; // km/h
+        private boolean hasValue = false;
 
         @Override
         public void onLocationChanged(Location location) {
+            this.hasValue = true;
             this.lat = location.getLatitude();
             this.lon = location.getLongitude();
             this.speed = location.getSpeed() * 1000 / 3600;
@@ -197,6 +199,10 @@ public class MainActivity extends AppCompatActivity implements
 
         public float getSpeed() {
             return speed;
+        }
+
+        public boolean isHasValue() {
+            return hasValue;
         }
     }
 
@@ -280,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements
             public void run() {
                 Optional<OntologyUtils.HumanStatus> result = Optional.empty();
 
-                if (locationListener != null) {
+                if (locationListener != null && locationListener.isHasValue()) {
                     double lat = locationListener.getLat();
                     double lon = locationListener.getLon();
                     double speed = locationListener.getSpeed();
@@ -296,8 +302,8 @@ public class MainActivity extends AppCompatActivity implements
                             getResources(),
                             guessLocation(),
                             OntologyUtils.MovementType.NO_MOVEMENT,
-                            temperature,
-                            Optional.of(speed)
+                            temperature.map(value -> (value > 30.0) ? OntologyUtils.TemperatureType.HIGH : OntologyUtils.TemperatureType.LOW),
+                            Optional.of(speed).map(value -> (value > 20.0) ? OntologyUtils.VelocityType.HIGH : OntologyUtils.VelocityType.LOW)
                     );
                 } else {
                     result = OntologyUtils.classify(

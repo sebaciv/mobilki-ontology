@@ -30,6 +30,23 @@
 
 
 
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasTemperature -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasTemperature">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Human"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature"/>
+    </owl:ObjectProperty>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasVelocity -->
+
+    <owl:ObjectProperty rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasVelocity">
+        <rdfs:domain rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Human"/>
+        <rdfs:range rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity"/>
+    </owl:ObjectProperty>
+
+
     <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#IsInLocation -->
 
     <owl:ObjectProperty rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#IsInLocation">
@@ -55,25 +72,6 @@
     //
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
-
-
-
-
-    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature -->
-
-    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature">
-        <rdfs:domain rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Human"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
-    </owl:DatatypeProperty>
-
-
-
-    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity -->
-
-    <owl:DatatypeProperty rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity">
-        <rdfs:domain rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Human"/>
-        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
-    </owl:DatatypeProperty>
 
 
 
@@ -116,7 +114,7 @@
                     <rdf:Description rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#FallenHuman"/>
                     <owl:Restriction>
                         <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasMovementLevel"/>
-                        <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Seizures"/>
+                        <owl:hasValue rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Seizures"/>
                     </owl:Restriction>
                 </owl:intersectionOf>
             </owl:Class>
@@ -135,22 +133,13 @@
                     <rdf:Description rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#FallenHuman"/>
                     <owl:Class>
                         <owl:intersectionOf rdf:parseType="Collection">
-                            <owl:Class>
-                                <owl:complementOf>
-                                    <owl:Restriction>
-                                        <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#IsInLocation"/>
-                                        <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HospitalLocation"/>
-                                    </owl:Restriction>
-                                </owl:complementOf>
-                            </owl:Class>
                             <owl:Restriction>
                                 <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#IsInLocation"/>
                                 <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#OutsideLocation"/>
                             </owl:Restriction>
                             <owl:Restriction>
-                                <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature"/>
-                                <owl:minQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">30</owl:minQualifiedCardinality>
-                                <owl:onDataRange rdf:resource="http://www.w3.org/2002/07/owl#rational"/>
+                                <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasTemperature"/>
+                                <owl:hasValue rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HighTemperature"/>
                             </owl:Restriction>
                         </owl:intersectionOf>
                     </owl:Class>
@@ -176,8 +165,8 @@
                                 <owl:someValuesFrom rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#OutsideLocation"/>
                             </owl:Restriction>
                             <owl:Restriction>
-                                <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity"/>
-                                <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#nonNegativeInteger">6</owl:minCardinality>
+                                <owl:onProperty rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HasVelocity"/>
+                                <owl:hasValue rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HighVelocity"/>
                             </owl:Restriction>
                         </owl:intersectionOf>
                     </owl:Class>
@@ -223,14 +212,6 @@
 
 
 
-    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#NoMovement -->
-
-    <owl:Class rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#NoMovement">
-        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#MovementLevel"/>
-    </owl:Class>
-
-
-
     <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#OutsideLocation -->
 
     <owl:Class rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#OutsideLocation">
@@ -242,14 +223,6 @@
     <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Phone -->
 
     <owl:Class rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Phone"/>
-
-
-
-    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Seizures -->
-
-    <owl:Class rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Seizures">
-        <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#MovementLevel"/>
-    </owl:Class>
 
 
 
@@ -268,6 +241,101 @@
         </owl:equivalentClass>
         <rdfs:subClassOf rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Human"/>
     </owl:Class>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature"/>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity -->
+
+    <owl:Class rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity"/>
+
+
+
+    <!--
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HighTemperature -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HighTemperature">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HighVelocity -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HighVelocity">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#LightMovement -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#LightMovement">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#MovementLevel"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#LowTemperature -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#LowTemperature">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Temperature"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#LowVelocity -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#LowVelocity">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Velocity"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#NoMovement -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#NoMovement">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#MovementLevel"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Seizures -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#Seizures">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#MovementLevel"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#SomeHomeLocation -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#SomeHomeLocation">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#HomeLocation"/>
+    </owl:NamedIndividual>
+
+
+
+    <!-- http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#SomeOutsideLocation -->
+
+    <owl:NamedIndividual rdf:about="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#SomeOutsideLocation">
+        <rdf:type rdf:resource="http://www.semanticweb.org/mdz/ontologies/2019/5/untitled-ontology-2#OutsideLocation"/>
+    </owl:NamedIndividual>
 </rdf:RDF>
 
 

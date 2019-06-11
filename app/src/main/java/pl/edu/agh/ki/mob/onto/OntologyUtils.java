@@ -34,14 +34,26 @@ public class OntologyUtils {
     public static final String OUTSIDE_LOCATION_CLASS = URL_BASE + "OutsideLocation";
     public static final String HOME_LOCATION_CLASS = URL_BASE + "HomeLocation";
 
-    public static final String NO_MOVEMENT_CLASS = URL_BASE + "NoMovement";
-    public static final String SEIZURES_MOVEMENT_CLASS = URL_BASE + "Seizures";
+    public static final String OUTSIDE_LOCATION_IND = URL_BASE + "SomeOutsideLocation";
+    public static final String HOME_LOCATION_IND = URL_BASE + "SomeHomeLocation";
+
+    public static final String NO_MOVEMENT_IND = URL_BASE + "NoMovement";
+    public static final String LIGHT_MOVEMENT_IND = URL_BASE + "LightMovement";
+    public static final String SEIZURES_MOVEMENT_IND = URL_BASE + "Seizures";
+
+    public static final String TEMPERATURE_CLASS = URL_BASE + "Temperature";
+    public static final String VELOCITY_CLASS = URL_BASE + "Velocity";
+
+    public static final String LOW_TEMPERATURE_IND = URL_BASE + "LowTemperature";
+    public static final String HIGH_TEMPERATURE_IND = URL_BASE + "HighTemperature";
+    public static final String LOW_VELOCITY_IND= URL_BASE + "LowVelocity";
+    public static final String HIGH_VELOCITY_IND = URL_BASE + "HighVelocity";
 
     public static final String LOCATION_PROP = URL_BASE + "IsInLocation";
     public static final String MOVEMENT_PROP = URL_BASE + "HasMovementLevel";
     public static final String NOT_ACTIVE_PROP = URL_BASE + "IsNotActivelyUsing";
-    public static final String TEMPERATURE_PROP = URL_BASE + "Temperature";
-    public static final String VELOCITY_PROP = URL_BASE + "Velocity";
+    public static final String TEMPERATURE_PROP = URL_BASE + "HasTemperature";
+    public static final String VELOCITY_PROP = URL_BASE + "HasVelocity";
 
     public enum HumanStatus {
         STANDING(STANDING_HUMAN_CLASS),
@@ -62,8 +74,8 @@ public class OntologyUtils {
     }
 
     public enum LocationType {
-        OUTSIDE(OUTSIDE_LOCATION_CLASS),
-        HOME(HOME_LOCATION_CLASS);
+        OUTSIDE(OUTSIDE_LOCATION_IND),
+        HOME(HOME_LOCATION_IND);
 
         private final String url;
 
@@ -77,12 +89,43 @@ public class OntologyUtils {
     }
 
     public enum MovementType {
-        NO_MOVEMENT(NO_MOVEMENT_CLASS),
-        SEIZURES(SEIZURES_MOVEMENT_CLASS);
+        NO_MOVEMENT(NO_MOVEMENT_IND),
+        LIGHT(LIGHT_MOVEMENT_IND),
+        SEIZURES(SEIZURES_MOVEMENT_IND);
 
         private final String url;
 
         MovementType(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
+
+    public enum VelocityType {
+        HIGH(HIGH_VELOCITY_IND),
+        LOW(LOW_VELOCITY_IND);
+
+        private final String url;
+
+        VelocityType(String url) {
+            this.url = url;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
+
+    public enum TemperatureType {
+        HIGH(HIGH_TEMPERATURE_IND),
+        LOW(LOW_TEMPERATURE_IND);
+
+        private final String url;
+
+        TemperatureType(String url) {
             this.url = url;
         }
 
@@ -102,8 +145,8 @@ public class OntologyUtils {
             Resources resources,
             LocationType locationType,
             MovementType movementType,
-            Optional<Double> temperature,
-            Optional<Double> velocity
+            Optional<TemperatureType> temperature,
+            Optional<VelocityType> velocity
     ) {
         OntModel ontoSchema = readOntology(resources);
 
@@ -114,20 +157,20 @@ public class OntologyUtils {
 
         ObjectProperty notActiveProperty = ontoSchema.createObjectProperty(NOT_ACTIVE_PROP);
         ObjectProperty movementProperty = ontoSchema.createObjectProperty(MOVEMENT_PROP);
-        DatatypeProperty tempProperty = ontoSchema.getDatatypeProperty(TEMPERATURE_PROP);
-        DatatypeProperty velocityProperty = ontoSchema.getDatatypeProperty(VELOCITY_PROP);
+        ObjectProperty tempProperty = ontoSchema.createObjectProperty(TEMPERATURE_PROP);
+        ObjectProperty velocityProperty = ontoSchema.createObjectProperty(VELOCITY_PROP);
 
         individual.addProperty(locationProperty, new ResourceImpl(locationType.getUrl()));
         individual.addProperty(notActiveProperty, new ResourceImpl(PHONE_CLASS));
         individual.addProperty(movementProperty, new ResourceImpl(movementType.getUrl()));
-        temperature.ifPresent(value -> individual.addLiteral(tempProperty, value.intValue()));
-        velocity.ifPresent(value -> individual.addLiteral(velocityProperty, value.intValue()));
+        temperature.ifPresent(value -> individual.addProperty(tempProperty, new ResourceImpl(value.getUrl())));
+        velocity.ifPresent(value -> individual.addProperty(velocityProperty, new ResourceImpl(value.getUrl())));
 
         Reasoner reasoner = ReasonerRegistry.getOWLReasoner();
         reasoner = reasoner.bindSchema(ontoSchema);
         InfModel infmodel = ModelFactory.createInfModel(reasoner, individual.getModel());
 
-        //individual.getOntModel().write(System.out);
+        individual.getOntModel().write(System.out);
 
         Optional<HumanStatus> result = Stream.of(
                 HumanStatus.ACCIDENT,
